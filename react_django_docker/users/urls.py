@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
-from views import User
+from . import views
 
 urlpatterns = [
-    path('api/v1/user', User.as_view()),
+    path('user', views.UserView.as_view()),
 ]

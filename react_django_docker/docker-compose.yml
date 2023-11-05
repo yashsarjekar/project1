@@ -30,3 +30,5 @@ services:
 
     volumes:
       - .dbdata:/var/libn/mysql
+    ports:
+      - 33066:3306

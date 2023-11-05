@@ -1,10 +1,22 @@
+from typing import Any
 from django.shortcuts import render
-from django.contrib.auth import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from users.services.user_services.\
+user_services import UserService
 # Create your views here.
-class User(APIView):
+class UserView(APIView):
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.__user_service = UserService()
 
     def get(self, request):
-        return Response({'message': 'success'})
+        users = self.__user_service.\
+        get_all_records()
+        return Response(
+            {
+                'message': 'success',
+                'users': users
+            }
+        )
