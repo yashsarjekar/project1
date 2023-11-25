@@ -24,23 +24,28 @@ class UserView(APIView):
         self.__custom_paginaton = CustomPagination()
 
     def get(self, request):
-        page_number = int(self.request.query_params.get('page_number', None))
+        page_number = self.request.query_params.get('page_number', None)
         users = self.__user_service.\
         get_all_records()
-        page_size = PAGE_SIZE
-        recods, has_next = self.__custom_paginaton.get_paginated_data(
-            data=users,
-            page_number=page_number,
-            page_size=page_size
-        )
-        user_serializer = UserSerializer(recods, many=True)
+        if page_number:
+            page_number = int(page_number)
+            page_size = PAGE_SIZE
+            recods, has_next = self.__custom_paginaton.get_paginated_data(
+                data=users,
+                page_number=page_number,
+                page_size=page_size
+            )
+            user_serializer = UserSerializer(recods, many=True)
+            API_RESPONSE['meta'] = {
+                'message': 'success',
+                'total_records': len(users),
+                'total_pages': len(users) // page_size,
+                'current_page_number': page_number
+            }
+        else:
+            user_serializer = UserSerializer(users, many=True)
         API_RESPONSE['results'] = user_serializer.data
-        API_RESPONSE['meta'] = {
-            'message': 'success',
-            'total_records': len(users),
-            'total_pages': len(users) // page_size,
-            'current_page_number': page_number
-        }
+
         return Response(
             API_RESPONSE,
             status=status.HTTP_200_OK
