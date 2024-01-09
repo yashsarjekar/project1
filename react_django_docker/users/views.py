@@ -2,8 +2,8 @@ from typing import Any
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from users.services.user_services.\
-user_services import UserService
+from users.services.user_services. \
+    user_services import UserService
 from users.serializers import (
     UserSerializer,
     PermissionSerializer,
@@ -16,6 +16,7 @@ from users.authenticate import JWTAuthentication
 from rest_framework import exceptions, viewsets, status, generics
 from react_django_docker.pagination import CustomPagination
 
+
 # Create your views here.
 class UserView(APIView):
     def __init__(self, **kwargs: Any) -> None:
@@ -25,8 +26,8 @@ class UserView(APIView):
 
     def get(self, request):
         page_number = self.request.query_params.get('page_number', None)
-        users = self.__user_service.\
-        get_all_records()
+        users = self.__user_service. \
+            get_all_records()
         if page_number:
             page_number = int(page_number)
             page_size = PAGE_SIZE
@@ -39,7 +40,7 @@ class UserView(APIView):
             API_RESPONSE['meta'] = {
                 'message': 'success',
                 'total_records': len(users),
-                'total_pages': len(users) // page_size,
+                'total_pages': self.__custom_paginaton.total_pages(users, page_size),
                 'current_page_number': page_number
             }
         else:
@@ -50,19 +51,18 @@ class UserView(APIView):
             API_RESPONSE,
             status=status.HTTP_200_OK
         )
-    
+
     def post(self, request):
         data = request.data
 
-        if data['password'] != data['passsword_confirm']:
+        if data['password'] != data['password_confirm']:
             raise Exception('Passwords do not match')
-        
 
         serializer = UserSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-    
+
 
 class UserLogin(APIView):
 
@@ -102,7 +102,8 @@ class UserLogin(APIView):
             }
         response.data = API_RESPONSE
         return response
-    
+
+
 class AuthenticationUser(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -111,18 +112,18 @@ class AuthenticationUser(APIView):
         user_serializer = UserSerializer(request.user)
         API_RESPONSE['results'] = user_serializer.data
         return Response(API_RESPONSE)
-    
+
 
 class LogoutUser(APIView):
     def post(self, request):
-        response =  Response()
+        response = Response()
         response.delete_cookie(key='jwt')
         response.data = {
             'message': 'success'
         }
 
         return response
-    
+
 
 class PermissionAPIView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -147,7 +148,6 @@ class PermissionAPIView(APIView):
 class RoleViewSet(viewsets.ViewSet):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -181,7 +181,6 @@ class RoleViewSet(viewsets.ViewSet):
         return Response(
             API_RESPONSE
         )
-        
 
     def update(self, request, pk=None):
         role = self.__user_services.get_role(id=pk)
@@ -197,10 +196,9 @@ class RoleViewSet(viewsets.ViewSet):
     def destroy(self, request, pk=None):
         self.__user_services.delete_role(id=pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
 
-class  UserGenericAPIView(APIView):
+class UserGenericAPIView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -210,10 +208,11 @@ class  UserGenericAPIView(APIView):
 
     def get(self, request, pk=None):
         if pk:
-            user_record = self.__user_services.\
+            user_record = self.__user_services. \
                 get_user_details(
                 id=pk
             )
+            print(user_record)
             user_serializer = UserSerializer(user_record)
             API_RESPONSE['results'] = user_serializer.data
             return Response(
@@ -226,7 +225,37 @@ class  UserGenericAPIView(APIView):
                 API_RESPONSE,
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
     def put(self, request, pk=None):
         if pk:
-            pass
+            updated = False
+            message = ""
+            tmp_status = status.HTTP_400_BAD_REQUEST
+            user_record = self.__user_services. \
+                get_user_details(
+                    id=pk
+                )
+
+            if user_record:
+                user_serializer = UserSerializer(data=request.data)
+                if user_serializer.is_valid():
+                    user_serializer.save()
+                    updated = True
+                    message = ("Users detials updated successfully "
+                               "")
+                    tmp_status = status.HTTP_200_OK
+                else:
+                    message = "Not Valid data"
+                    tmp_status = status.HTTP_406_NOT_ACCEPTABLE
+            else:
+                message = "User Not Found"
+                tmp_status = status.HTTP_404_NOT_FOUND
+            API_RESPONSE['message'] = "success"
+            API_RESPONSE["results"] = message
+        else:
+            API_RESPONSE['results'] = "Not valid request"
+
+        return Response(
+            API_RESPONSE,
+            status=tmp_status
+        )

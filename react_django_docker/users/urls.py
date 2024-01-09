@@ -11,7 +11,7 @@ from users.views import (
     UserGenericAPIView
 )
 urlpatterns = [
-    path('user/', UserView.as_view()),
+    path('user', UserView.as_view()),
     path('login', UserLogin.as_view()),
     path('user_authentication', AuthenticationUser.as_view()),
     path('logout', LogoutUser.as_view()),

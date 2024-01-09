@@ -1,5 +1,4 @@
 API_RESPONSE = {
-    "status": 200,
     "results": []
 }
 PAGE_SIZE = 2
