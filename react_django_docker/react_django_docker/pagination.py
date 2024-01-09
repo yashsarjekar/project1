@@ -10,3 +10,8 @@ class CustomPagination:
             return paginated_queryset, True
         else:
             return paginated_queryset, False
+
+    def total_pages(self, records, page_size) -> int:
+        if len(records)%page_size==0:
+            return len(records)//page_size
+        return len(records)//page_size + 1

@@ -8,3 +8,4 @@ sqlparse==0.4.4
 tzdata==2023.3
 PyJWT==1.7.1
 openai
+django-cors-headers==3.5.0
